@@ -20,6 +20,14 @@ STRINGS_TROPHY_GOLD =			"Золото"
 STRINGS_TROPHY_SILVER =			"Серебро"
 STRINGS_TROPHY_BRONZE =			"Бронза"
 
+--Sort
+STRING_SORT_ID =                "Trophy id"
+STRING_SORT_UNLOCKED =          "Unlocked"
+STRING_SORT_HIDDEN =            "Hidden"
+STRING_SORT_GROUP =             "Group"
+STRING_SORT_TITLE =             "Title"
+STRING_SORT_PROGRESS =          "Progress"
+
 STRINGS_DELETE_QUESTION =		"Хочешь удалить эти трофеи?"
 STRINGS_HIDDEN_YES =			"Да"
 STRINGS_HIDDEN_NO =				"Нет"
@@ -27,6 +35,22 @@ STRINGS_HIDDEN_NO =				"Нет"
 --color yellow
 STRINGS_TROPHY_WARNING_HIDDEN =	"СКРЫТЫЙ"
 
---Wifi is on
+--Trophies App
 STRINGS_TROPHY_OPENAPP =		"Трофеи"
+STRINGS_TROPHY_REBUILD =		"Rebuild Trohhy Database"
 STRINGS_TROPHY_WIFI_ON =		"Не забудь отключить Wi-Fi, чтобы не синхронизировать трофеи"
+
+
+--Confirm
+STRING_CONFIRM_EXIT =           "Are you sure want to exit the app?"
+STRING_CONFIRM_UNLOCK =         "Are you sure want to modify the unlock status of this trophy?\nNote this will not affect the trophies which already synced to PSN\nThe timestamp may not that accurate"
+STRING_CONFIRM_LOCK =           "Are you sure want to lock this trophy?\nNote this will not affect the trophies which already synced to PSN"
+STRING_UNLOCKED =               "Unlock success"
+STRING_LOCKED =                 "Lock success"
+
+--Modify menu
+STRINGS_MODIFY_TROPHY =         "Modify Trophy"
+STRINGS_APPLY_MODIFY =          "Apply Modify"
+STRINGS_CANCLE_MODIFY =         "Cancle Modify"
+STRINGS_SWITCH_MODIFY =         "Switch Modify Section"
+STRINGS_MODIFY_VALUE =          "Modify Value"

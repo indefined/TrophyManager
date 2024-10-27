@@ -20,7 +20,7 @@
 
 local trophyL,gid = {},-1
 
-local trophies_type = {	
+trophies_type = {
 	name = {STRINGS_TROPHY_PLATINUM, STRINGS_TROPHY_GOLD, STRINGS_TROPHY_SILVER, STRINGS_TROPHY_BRONZE },
 	num = {	0,1,2,3,4,5 },
 	win = {STRINGS_TROPHY_LOCKED, STRINGS_TROPHY_UNLOCKED },
@@ -34,6 +34,13 @@ function get_trophiesL(obj)
 
 	if tmp and #tmp> 0 then
 
+		game.umount()
+		buttons.homepopup(0)
+		game.mount(DATA_TROPHY..obj.npcommid.."/")
+		local fp = io.open(DATA_TROPHY..obj.npcommid.."/TRPTITLE.DAT","r")
+		fp:seek("set", 0)
+		trptitle = fp:read("*a")
+
 		for i=1, #tmp do
 			tmp[i].trophyid = tonumber(tmp[i].trophyid)
 			tmp[i].groupid = tonumber(tmp[i].groupid)
@@ -46,10 +53,23 @@ function get_trophiesL(obj)
 				tmp[i].view = true
 			end
 
+			local trophy_offset2 = readBE4(trptitle, BASETROP2) + (tmp[i].trophyid * TRPBLOCK2)
+			local trophyblock2 = string.sub(trptitle, trophy_offset2 + 1, trophy_offset2 + TRPBLOCK2)
+
+			--# Checks if trophy is already unlocked and synced
+			tmp[i].unlocked = trophyblock2:byte(TROPHYSTATE+1)
+			tmp[i].synced = trophyblock2:byte(TROPHYSSYNC+1)
+
+			-- Obtain unlocktime and synced time from trophy block 1 for later use
+			tmp[i].unlocktime = string.sub(trophyblock2, TROPHYDATE1 + 1, TROPHYDATE1 + 8)
+			tmp[i].synctime = string.sub(trophyblock2, TROPHYDATE2 + 1, TROPHYDATE2 + 8)
+
 			tmp[i].pathicon = ICONS_TROPHY..obj.npcommid.."/TROP"..string.rep("0", 3 - string.len(tmp[i].trophyid))..tmp[i].trophyid..".PNG"
 			table.insert(trophyL,tmp[i])
 		end
+		game.umount()
 
+		buttons.homepopup(1)
 	end
 
 end
@@ -75,6 +95,7 @@ function trophies_list(obj)
 
 	local maxim,inter,d_scroll,t_scroll,init_scroll,sort_L = 5,55,25,25,25,1
 	local scroll = newScroll(trophyL,maxim)
+	local splits = {" ", "-", "-", " ", ":", ":", ""}
 
 	buttons.interval(12,5)
 	while true do
@@ -82,6 +103,7 @@ function trophies_list(obj)
 		if back then back:blit(0,0) end
 		if icon then icon:blit(0,0,85) end
 
+		local selectx, selecty
 		---------------------------Impresion en pantalla-----------------------------------
 		if screen.textwidth(obj.title,1) > 870 then
 			init_scroll = screen.print(init_scroll,35,obj.title,1,color.white,color.black,__SLEFT,860)
@@ -133,7 +155,24 @@ function trophies_list(obj)
 				end
 
 				if trophyL[i].unlocked == 0 then cc=color.white else cc=color.green:a(200) end
-				screen.print(25, y + (inter/2), STRINGS_TROPHY_TYPE.." "..trophies_type.name[trophyL[i].type].."  "..STRINGS_TROPHY_STATUS.."  "..trophies_type.win[trophyL[i].unlocked + 1].."  "..STRINGS_TROPHY_HIDDEN.."  "..trophies_type.hid[trophyL[i].hidden+1],1,cc,color.blue:a(85))
+				local textL = screen.print(25, y + (inter/2), STRINGS_TROPHY_TYPE.." "..trophies_type.name[trophyL[i].type]..",  "..STRINGS_TROPHY_HIDDEN.."  "..trophies_type.hid[trophyL[i].hidden+1]..", "..STRINGS_TROPHY_STATUS.."  ",1,cc,color.blue:a(85))
+				if editing.status == true and i == scroll.sel then
+					-- print the editing
+					local ey = y + (inter/2)
+					local ex = textL + 27
+					textw = screen.textwidth(table.concat(editing.values)..table.concat(splits)) + 8
+					draw.fillrect(ex-4,  ey-6 , textw, 28, color.blue:a(125))
+					for p, v in pairs(editing.values) do
+						local ox = screen.print(ex, ey, v,1,cc,color.red:a(85))
+						if p == editing.position then
+							draw.fillrect(ex,  ey -6, ox, 28, color.green:a(125))
+							screen.print(ex, ey, v,1,cc,color.red:a(85))
+						end
+						ex = ex + ox + screen.print(ex+ox, ey, splits[p],1,cc,color.red:a(85))
+					end
+				else
+					screen.print(25+textL+2, y + (inter/2), trophies_type.win[trophyL[i].unlocked + 1].." "..formatTimestamp(decodeTimestamp(trophyL[i].unlocktime)),1,cc,color.blue:a(85))
+				end
 
 				--Blit icon
 				if not trophyL[i].icon then
@@ -169,6 +208,11 @@ function trophies_list(obj)
 					end
 				end
 
+				y+=inter + 15
+
+			end --for
+
+			if editing.status == false then
 				if trophyL[scroll.sel].hidden == 1 then
 					if buttonskey then buttonskey:blitsprite(10,447,2) end                     		--[]
 					screen.print(40,450,STRINGS_SHOW_DETAILS,1,color.white,color.black,__ALEFT)
@@ -177,9 +221,23 @@ function trophies_list(obj)
 				if buttonskey2 then buttonskey2:blitsprite(5,467,0) end
 				screen.print(40,470,STRINGS_SORT.._SORT_L[sort_L],1,color.white,color.black,__ALEFT)
 
-				y+=inter + 15
+				if buttonskey then buttonskey:blitsprite(940,467,accept_p) end                     --Accept to modify
+				screen.print(935,470,STRINGS_MODIFY_TROPHY,1,color.white,color.black,__ARIGHT)
+			else
+				-- modify trophy
+				if buttonskey3 then buttonskey3:blitsprite(5,447,0) end                            --Arrow left & right
+				if buttonskey3 then buttonskey3:blitsprite(25,447,1) end
+				screen.print(50,447,STRINGS_SWITCH_MODIFY,1,color.white,color.black,__ALEFT)
+				if buttonskey3 then buttonskey3:blitsprite(5,467,2) end                            --Arrow up & down
+				if buttonskey3 then buttonskey3:blitsprite(25,467,3) end
+				screen.print(50,470,STRINGS_MODIFY_VALUE,1,color.white,color.black,__ALEFT)
 
-			end --for
+				if buttonskey then buttonskey:blitsprite(940,447,accept_p) end                     --Accept to apply modify
+				screen.print(935,450,STRINGS_APPLY_MODIFY,1,color.white,color.black,__ARIGHT)
+
+				if buttonskey then buttonskey:blitsprite(940,467,cancle_p) end                     --Cancel
+				screen.print(935,470,STRINGS_CANCLE_MODIFY,1,color.white,color.black,__ARIGHT)
+			end
 
 		else
 			screen.print(480,272,STRINGS_EMPTY,1.5,color.yellow,color.black,__ACENTER)
@@ -190,34 +248,43 @@ function trophies_list(obj)
 		----------------------------------Controls-------------------------------
 		if scroll.maxim > 0 and trophyL then
 
-			if (buttons.up or buttons.held.l or buttons.analogly<-60) then
-				if scroll:up() then d_scroll,t_scroll,init_scroll = 25,25,25 end
-			end
+			if editing.status then
+				-- Button controls for modify values
+				modify_control(obj, trophyL[scroll.sel])
 
-			if (buttons.down or buttons.held.r or buttons.analogly>60) then 
-				if scroll:down() then d_scroll,t_scroll,init_scroll = 25,25,25 end
-			end
+			else
+				-- buttons controls when not in editing mode
 
-			if buttons.square and (trophyL[scroll.sel].unlocked == 0 and trophyL[scroll.sel].hidden == 1) then
-				--if trophyL[scroll.sel].unlocked == 0 then
-					--if trophyL[scroll.sel].hidden == 1 then
-						trophyL[scroll.sel].view = not trophyL[scroll.sel].view
-					--end
-				--end
-			end
+				if buttons[accept] then modify_start(trophyL[scroll.sel]) end -- Accept button to start modify
 
-			if buttons.select then
-				if sort_L == 1 then
-					sort_L = 2
-					table.sort(trophyL, function (a,b) return a.unlocked>b.unlocked end)
-				elseif sort_L == 2 then
-					sort_L = 3
-					table.sort(trophyL, function (a,b) return a.hidden>b.hidden end)
-				elseif sort_L == 3 then
-					sort_L = 1
-					table.sort(trophyL, function (a,b) return a.trophyid<b.trophyid end)
+				if (buttons.up or buttons.held.l or buttons.analogly<-60) then
+					if scroll:up() then d_scroll,t_scroll,init_scroll = 25,25,25 end
 				end
-			end
+
+				if (buttons.down or buttons.held.r or buttons.analogly>60) then 
+					if scroll:down() then d_scroll,t_scroll,init_scroll = 25,25,25 end
+				end
+
+				if buttons.square then
+					if trophyL[scroll.sel].unlocked == 0 then
+						if trophyL[scroll.sel].hidden == 1 then
+							trophyL[scroll.sel].view = not trophyL[scroll.sel].view
+						end
+					end
+				end
+
+				if buttons.select then
+					if sort_L == 1 then
+						sort_L = 2
+						table.sort(trophyL, function (a,b) return sortTimestamp(a.unlocktime, b.unlocktime) end)
+					elseif sort_L == 2 then
+						sort_L = 3
+						table.sort(trophyL, function (a,b) return a.hidden>b.hidden end)
+					elseif sort_L == 3 then
+						sort_L = 1
+						table.sort(trophyL, function (a,b) return a.trophyid<b.trophyid end)
+					end
+				end
 
 --[[
 			if buttons[accept] and obj.exist then
@@ -227,9 +294,10 @@ function trophies_list(obj)
 				game.umount()
 			end
 ]]
+			end
 		end
 
-		if buttons.released[cancel] then
+		if buttons[cancel] then
 			trophyL = {}
 
 			collectgarbage("collect")

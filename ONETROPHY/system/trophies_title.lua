@@ -188,18 +188,18 @@ function trophies_title()
 					trophyT[i].icon0:blit(955 - (trophyT[i].icon0:getw()/2), y + (inter/2))
 				end
 
-				if buttonskey then buttonskey:blitsprite(10,437,2) end                     		--[]
-				screen.print(40,440,STRINGS_MARK_TROPHIES,1,color.white,color.black,__ALEFT)
-
-				if buttonskey2 then buttonskey2:blitsprite(5,460,1) end                   		--Start
-				screen.print(40,462,STRINGS_DEL_TROPHIES,1,color.white,color.black, __ALEFT)
-
-				if buttonskey2 then buttonskey2:blitsprite(5,483,0) end                     	--select
-				screen.print(40,485,STRINGS_SORT.._SORT_T[sort_T],1,color.white,color.black,__ALEFT)
-
 				y+=inter + 15
 
 			end --for
+
+			if buttonskey then buttonskey:blitsprite(10,437,2) end                     		--[]
+			screen.print(40,440,STRINGS_MARK_TROPHIES,1,color.white,color.black,__ALEFT)
+
+			if buttonskey2 then buttonskey2:blitsprite(5,460,1) end                   		--Start
+			screen.print(40,462,STRINGS_DEL_TROPHIES,1,color.white,color.black, __ALEFT)
+
+			if buttonskey2 then buttonskey2:blitsprite(5,483,0) end                     	--select
+			screen.print(40,485,STRINGS_SORT.._SORT_T[sort_T],1,color.white,color.black,__ALEFT)
 
 		else
 			screen.print(480,202,STRINGS_EMPTY,1.5,color.yellow,color.black,__ACENTER)
@@ -212,8 +212,13 @@ function trophies_title()
 
 		end
 
-		if buttonskey then buttonskey:blitsprite(940,483,1) end                     		--Triangle
-		screen.print(935,485,STRINGS_TROPHY_OPENAPP,1,color.white,color.black,__ARIGHT)
+		if buttonskey then buttonskey:blitsprite(940,460,1) end                     		--Triangle
+		screen.print(935,462,STRINGS_TROPHY_OPENAPP,1,color.white,color.black,__ARIGHT)
+
+		if buttonskey2 then buttonskey2:blitsprite(900,483,2) end                   		--L1 + Triangle to force rebuild databse
+		if buttonskey then buttonskey:blitsprite(940,483,1) end
+		screen.print(938,483,"+",1,color.white,color.black,__ARIGHT)
+		screen.print(895,485,STRINGS_TROPHY_REBUILD,1,color.white,color.black,__ARIGHT)
 
 		screen.flip()
 
@@ -292,18 +297,30 @@ function trophies_title()
 		if buttons.triangle then
 			if wlan.isconnected() then os.message(STRINGS_TROPHY_WIFI_ON)
 			else
+				-- hold L when open trophy app to force rebuild the trophy database
+				if buttons.held.l then
+					files.delete(TROP_TROPHY)
+					flag_delete_db = true
+				end
 				if flag_delete_db then files.delete(DB_TROPHY) end
+				game.umount()
+				collectgarbage("collect")
 				os.delay(500)
-				if flag_delete_db then buttons.homepopup(0) else buttons.homepopup(1) end
-
+				-- if flag_delete_db then buttons.homepopup(0) else buttons.homepopup(1) end -- doesn't make sence when open another app but disable the pop?
+				buttons.homepopup(1)
 				os.uri("pstc:")
+				if flag_delete_db then
+					os.delay(500)
+					os.exit() -- the app need to reload after rebuild database, so just exit the app
+				end
 			end
 		end
 
-		if buttons[cancel] then
+		if buttons[cancel] and os.message(STRING_CONFIRM_EXIT, 1) == 1 then
 			if flag_delete_db then files.delete(DB_TROPHY) end
 			buttons.homepopup(1)
-			os.exit()
+			if buttons.held.l then string.char(intention_crach_when_hold_l_on_exit_to_open_usb_mode)
+			else os.exit() end
 		end
 
 	end

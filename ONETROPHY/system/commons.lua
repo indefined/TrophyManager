@@ -35,17 +35,20 @@ __LANG      = os.language()
 
 -- Loading language file
 dofile("lang/english_us.txt")
-if not files.exists(__PATH_LANG.."english_us.txt") then files.copy("lang/english_us.txt",__PATH_LANG) end
-if files.exists(__PATH_LANG..__LANG..".txt") then dofile(__PATH_LANG..__LANG..".txt") end
+
+if files.exists(__PATH_LANG..__LANG..".txt") then dofile(__PATH_LANG..__LANG..".txt")
+elseif files.exists("lang/"..__LANG..".txt") then dofile("lang/"..__LANG..".txt") end
 
 -- Loading custom font
-fnt = font.load(__PATH_FONT.."font.ttf") or font.load(__PATH_FONT.."font.pgf") or font.load(__PATH_FONT.."font.pvf")
+fnt = font.load(__PATH_FONT.."font.ttf") or font.load(__PATH_FONT.."font.pgf") or font.load(__PATH_FONT.."font.pvf") or font.load("font/font.ttf") or font.load("font/font.pgf") or font.load("font/font.pvf")
 if fnt then	font.setdefault(fnt) end
 
 --buttons asignation
 accept,cancel = "cross","circle"
+accept_p,cancle_p = 0, 3
 if buttons.assign()==0 then
 	accept,cancel = "circle","cross"
+	accept_p,cancle_p = 3, 0
 end
 
 --Load resources
@@ -53,6 +56,7 @@ back = image.load("resources/background.png")
 img_trophies = image.load("resources/trophies.png",60,60)
 buttonskey = image.load("resources/buttons.png",20,20)
 buttonskey2 = image.load("resources/buttons2.png",30,20)
+buttonskey3 = image.load("resources/buttons3.png",20,20)
 
 --sorts
 _SORT_L = { STRING_SORT_ID, STRING_SORT_UNLOCKED, STRING_SORT_HIDDEN }

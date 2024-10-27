@@ -196,7 +196,8 @@ function trophies_group(obj)
 			collectgarbage("collect")
 			os.delay(250)
 
-			return true
+			buttons.read()
+			break
 		end
 
 	end

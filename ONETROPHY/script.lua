@@ -22,6 +22,8 @@ game.close()
 
 dofile("system/commons.lua")
 dofile("system/scroll.lua")
+dofile("system/trophies_helper.lua")
+dofile("system/trophies_modify.lua")
 dofile("system/trophies_title.lua")
 dofile("system/trophies_group.lua")
 dofile("system/trophies_list.lua")

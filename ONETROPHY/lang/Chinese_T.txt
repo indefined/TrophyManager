@@ -4,15 +4,15 @@ STRINGS_MARK_TROPHIES =			"標記/取消標記 獎杯"
 STRINGS_DEL_TROPHIES =			"刪除獎杯"
 STRINGS_SHOW_DETAILS =			"顯示詳情"
 STRINGS_EMPTY =					"沒有獎杯！！！"
-STRINGS_SORT =                  "Sort: "
+STRINGS_SORT =                  "排序: "
 
-STRINGS_RELOAD_TROPHIES =		"需要先與獎杯氣泡同歩\n\n（非聯網上傳）"
+STRINGS_RELOAD_TROPHIES =		"需要先打開奬杯應用氣泡刷新奬杯數據庫\n\n（非聯網上傳）"
 STRINGS_GAME_NOT_INSTALLED =	"遊戲还沒安裝！！！"
-STRINGS_SUB_TROPHIES =			"Sub－獎杯："
+STRINGS_SUB_TROPHIES =			"奬杯組："
 
-STRINGS_TROPHY_TYPE =			"獎杯："
-STRINGS_TROPHY_STATUS =			"數據："
-STRINGS_TROPHY_HIDDEN =			"隱藏："
+STRINGS_TROPHY_TYPE =			"獎杯:"
+STRINGS_TROPHY_STATUS =			"狀態:"
+STRINGS_TROPHY_HIDDEN =			"隱藏:"
 STRINGS_TROPHY_UNLOCKED =		"已解鎖"
 STRINGS_TROPHY_LOCKED =			"鎖定"
 
@@ -22,12 +22,12 @@ STRINGS_TROPHY_SILVER =			"白銀"
 STRINGS_TROPHY_BRONZE =			"青銅"
 
 --Sort
-STRING_SORT_ID =                "Trophy id"
-STRING_SORT_UNLOCKED =          "Unlocked"
-STRING_SORT_HIDDEN =            "Hidden"
-STRING_SORT_GROUP =             "Group"
-STRING_SORT_TITLE =             "Title"
-STRING_SORT_PROGRESS =          "Progress"
+STRING_SORT_ID =                "奬杯ID"
+STRING_SORT_UNLOCKED =          "解鎖狀態"
+STRING_SORT_HIDDEN =            "隱藏狀態"
+STRING_SORT_GROUP =             "分組"
+STRING_SORT_TITLE =             "標題"
+STRING_SORT_PROGRESS =          "進度"
 
 STRINGS_DELETE_QUESTION =		"你確定要消除這些獎杯嗎？"
 STRINGS_HIDDEN_YES =			"是"
@@ -36,6 +36,21 @@ STRINGS_HIDDEN_NO =				"否"
 --color yellow
 STRINGS_TROPHY_WARNING_HIDDEN =	"隱藏"
 
---Wifi is on
+--Trophies App
 STRINGS_TROPHY_OPENAPP =		"獎杯應用"
+STRINGS_TROPHY_REBUILD =		"重構奬杯數據庫"
 STRINGS_TROPHY_WIFI_ON =		"記得關閉WI-FI,以防止上傳獎杯"
+
+--Confirm
+STRING_CONFIRM_EXIT =           "你確定要退出應用嗎？"
+STRING_CONFIRM_UNLOCK =         "是否確認修改該奬杯解鎖狀態?\n注意已經同步到PSN的奬杯將不會被修改影響\n修改時間戳將不會很精準"
+STRING_CONFIRM_LOCK =           "是否確認鎖定該奬杯?\n注意已經同步到PSN的奬杯將不會被修改影響"
+STRING_UNLOCKED =               "修改成功"
+STRING_LOCKED =                 "鎖定成功"
+
+--Modify menu
+STRINGS_MODIFY_TROPHY =         "修改解鎖狀態"
+STRINGS_APPLY_MODIFY =          "應用修改"
+STRINGS_CANCLE_MODIFY =         "取消修改"
+STRINGS_SWITCH_MODIFY =         "切換修改部分"
+STRINGS_MODIFY_VALUE =          "修改數據"
