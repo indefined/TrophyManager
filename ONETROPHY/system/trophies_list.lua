@@ -250,7 +250,7 @@ function trophies_list(obj)
 
 			if editing.status then
 				-- Button controls for modify values
-				modify_control(obj, trophyL[scroll.sel])
+				modify_control(obj.npcommid, trophyL[scroll.sel])
 
 			else
 				-- buttons controls when not in editing mode

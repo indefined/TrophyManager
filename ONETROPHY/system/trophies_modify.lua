@@ -14,14 +14,26 @@
 
 editing = {status = false, position = 1, value = {}}
 
-function unlock_trophy(obj, trop, timestamp)
 
-	local dir = DATA_TROPHY..obj.npcommid
+function find_transblock(trptrans, trans_num, trans_trp_offset, tropid)
+	-- # Loop through trophy blocks looking for trophy ID to remove
+	for i = 0, trans_num do
+		-- # If trophy block does not match, continue loop
+		--print(string.format("trans id: 0x%X, 0x%X", trans_trp_offset + (TRANBLOCK * i) + 0x30, readBE4(trptrans, trans_trp_offset + (TRANBLOCK * i) + 0x30)))
+		if readBE4(trptrans, trans_trp_offset + (TRANBLOCK * i) + 0x30) == tropid then
+			return i
+		end
+	end
+end
+
+function unlock_trophy(gameid, trop, timestamp)
+
+	local dir = DATA_TROPHY..gameid.."/"
 	buttons.homepopup(0)
 	game.umount()
-	game.mount(dir.."/")
-	local fptitle = io.open(dir.."/TRPTITLE.DAT","rw+b")
-	local fptrans = io.open(dir.."/TRPTRANS.DAT","r+b")
+	game.mount(dir)
+	local fptitle = io.open(dir.."TRPTITLE.DAT","rw+b")
+	local fptrans = io.open(dir.."TRPTRANS.DAT","r+b")
 	local result = false
 
 	if fptitle and fptrans then
@@ -86,15 +98,19 @@ function unlock_trophy(obj, trop, timestamp)
 		-- Gets number of trophies in file and increases it for added trophy
 		trans_num = readBE4(trptrans, trans_num_offset)
 
-		-- increase the unlocked trophy if the trophy is not unlocked before
-		if trop.unlocked == LOCKED then
-			trans_num = trans_num + 1
+		-- find if a trans block already existed
+		local i = find_transblock(trptrans, trans_num, trans_trp_offset, id)
+
+		if not i then
+			-- if a trans block not existed 
+			i = trans_num -- # Move to the next available empty block
+			trans_num = trans_num + 1 -- increase the trans_num
 			fptrans:seek("set", trans_num_offset)
 			fptrans:write(toBE4(trans_num))
 		end
 
-		-- # Move to the next available empty block and write trophy data
-		fptrans:seek("set", trans_trp_offset + (TRANBLOCK * (trans_num-1)))
+		-- # Move to the target block and write trophy data
+		fptrans:seek("set", trans_trp_offset + (TRANBLOCK * i))
 		fptrans:seek("cur", 0x14)
 		fptrans:write(toBE4(0X02))
 		fptrans:seek("cur", 0x18)
@@ -122,14 +138,14 @@ function unlock_trophy(obj, trop, timestamp)
 	return result
 end
 
-function lock_trophy(obj, trop)
+function lock_trophy(gameid, trop)
 
-	local dir = DATA_TROPHY..obj.npcommid
+	local dir = DATA_TROPHY..gameid.."/"
 	game.umount()
 	buttons.homepopup(0)
-	game.mount(dir.."/")
-	local fptitle = io.open(dir.."/TRPTITLE.DAT","rw+b")
-	local fptrans = io.open(dir.."/TRPTRANS.DAT","r+b")
+	game.mount(dir)
+	local fptitle = io.open(dir.."TRPTITLE.DAT","rw+b")
+	local fptrans = io.open(dir.."TRPTRANS.DAT","r+b")
 	local result = false
 
 	if fptitle and fptrans then
@@ -197,20 +213,21 @@ function lock_trophy(obj, trop)
 		fptitle:seek("cur", math.floor(id/8))
 		fptitle:write(string.char(clearbit(group_progress, id % 8)))
 
-		-- Only process the trans if target is unlocked before
-		if trop.unlocked == UNLOCKED then
-			print("try lock trans")
-			-- # Set offsets for how many trophies are in the file and where the trophy blocks are
-			local trans_num_offset = readBE4(trptrans, 0x84) + 0x24
-			local trans_trp_offset = readBE4(trptrans, 0xA4)
+		-- # Set offsets for how many trophies are in the file and where the trophy blocks are
+		local trans_num_offset = readBE4(trptrans, 0x84) + 0x24
+		local trans_trp_offset = readBE4(trptrans, 0xA4)
 
-			print(string.format("trans offset: 0x%X, 0x%X", trans_num_offset, trans_trp_offset))
-			-- Gets number of trophies in file and increases it for added trophy
-			local trans_num = readBE4(trptrans, trans_num_offset)
-			local trans_synced = readBE4(trptrans, trans_num_offset + 0x4)
+		print(string.format("trans offset: 0x%X, 0x%X", trans_num_offset, trans_trp_offset))
+		-- Gets number of trophies in file and increases it for added trophy
+		local trans_num = readBE4(trptrans, trans_num_offset)
+		local trans_synced = readBE4(trptrans, trans_num_offset + 0x4)
 
-			print(string.format("trans num: 0x%02X, 0x%02X", trans_num, trans_synced))
+		print(string.format("trans num: 0x%02X, 0x%02X", trans_num, trans_synced))
 
+		local i = find_transblock(trptrans, trans_num, trans_trp_offset, id)
+
+		-- Only process the trans if target block existed
+		if i then
 			-- decrease the unlocked trophy
 			trans_num = trans_num - 1
 			fptrans:seek("set", trans_num_offset)
@@ -219,24 +236,16 @@ function lock_trophy(obj, trop)
 			-- # If there's only one trophy, prevent last synced trophy from reducing
 			if trans_synced > 1 then fptrans:write(toBE4(trans_synced - 1)) end
 
-			-- # Loop through trophy blocks looking for trophy ID to remove
-			for i = 0, trans_num do
-				-- # If trophy block does not match, continue loop
-				--print(string.format("trans id: 0x%X, 0x%X", trans_trp_offset + (TRANBLOCK * i) + 0x30, readBE4(trptrans, trans_trp_offset + (TRANBLOCK * i) + 0x30)))
-				if readBE4(trptrans, trans_trp_offset + (TRANBLOCK * i) + 0x30) == id then
-					-- # When found, move each remaining entry up to prevent blank spaces
-					local trans_target_offset = trans_trp_offset + (TRANBLOCK * i) + 0x15
-					print(string.format("found match trans id: 0x%02X", trans_target_offset))
-					fptrans:seek("set", trans_target_offset + TRANBLOCK)
-					while i <= trans_num do
-						local blk = fptrans:read(0x3B)
-						fptrans:seek("cur", TRANBLOCK * -1 - 0x3B)
-						fptrans:write(blk)
-						fptrans:seek("cur", TRANBLOCK * 2 - 0x3B)
-						i = i + 1
-					end
-					break
-				end
+			-- # move each remaining entry up to prevent blank spaces
+			local trans_target_offset = trans_trp_offset + (TRANBLOCK * i) + 0x15
+			print(string.format("found match trans id: 0x%02X", trans_target_offset))
+			fptrans:seek("set", trans_target_offset + TRANBLOCK)
+			while i <= trans_num do
+				local blk = fptrans:read(0x3B)
+				fptrans:seek("cur", TRANBLOCK * -1 - 0x3B)
+				fptrans:write(blk)
+				fptrans:seek("cur", TRANBLOCK * 2 - 0x3B)
+				i = i + 1
 			end
 
 			-- # Cleanup final block to ensure it's empty
@@ -276,7 +285,7 @@ function modify_start(trop)
 	}
 end
 
-function modify_control(obj, trop)
+function modify_control(gameid, trop)
 
 	if buttons[accept] then
 		editing.status = false
@@ -291,7 +300,7 @@ function modify_control(obj, trop)
 					min = editing.values[6],
 					sec = editing.values[7]
 				})
-				if (unlock_trophy(obj, trop, ts)) then
+				if (unlock_trophy(gameid, trop, ts)) then
 					files.delete(TROP_TROPHY)
 					os.message(STRING_UNLOCKED)
 				end
@@ -299,7 +308,7 @@ function modify_control(obj, trop)
 		else
 			-- lock
 			if trop.unlocked == 1 and os.message(STRING_CONFIRM_LOCK, 1) == 1 then
-				if (lock_trophy(obj, trop)) then
+				if (lock_trophy(gameid, trop)) then
 					files.delete(TROP_TROPHY)
 					os.message(STRING_LOCKED)
 				end
